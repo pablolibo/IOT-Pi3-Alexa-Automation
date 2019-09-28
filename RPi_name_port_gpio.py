@@ -11,7 +11,12 @@ import logging
 import time
 import sys
 import RPi.GPIO as GPIO ## Import GPIO library
- 
+
+#############Servo varianles
+from gpiozero import Servo
+from time import sleep
+
+###################
 from debounce_handler import debounce_handler
  
 logging.basicConfig(level=logging.DEBUG)
@@ -22,30 +27,38 @@ class device_handler(debounce_handler):
     """
     #TRIGGERS = {str(sys.argv[1]): int(sys.argv[2])}
     #TRIGGERS = {"Light": 52000}
-    TRIGGERS = {"LED": 52000,"FAN":51000}
+    TRIGGERS = {"FLORA": 52000}
 
     def act(self, client_address, state, name):
         print("State", state, "from client @", client_address)
-        # GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
-        # GPIO.setup(int(7), GPIO.OUT)   ## Setup GPIO Pin to OUTPUT
-        # GPIO.output(int(7), state) ## State is true/false
-        if name=="kitchen":
-            GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
-            GPIO.setup(int(7), GPIO.OUT)   ## Setup GPIO Pin to OUTPUT
-            GPIO.output(int(7), state) ## State is true/false
-        elif name =="living room":
-            GPIO.setmode(GPIO.BOARD) ## Use board pin numbering
-            GPIO.setup(int(11), GPIO.OUT)   ## Setup GPIO Pin to OUTPUT
-            GPIO.output(int(11), state) ## State is true/false
+        if name=="FLORA":
+            ServoPin=11
+            Angulo=100
+            PWM_start=3
+
+            GPIO.setmode(GPIO.BOARD)
+            GPIO.setup(ServoPin, GPIO.OUT)
+            GPIO.output(ServoPin, state)
+            pwm=GPIO.PWM(ServoPin, 50)
+ 
+            pwm.start(PWM_start)
+            sleep(1)
+
+            DC=1./18.*(Angulo)+2
+            pwm.ChangeDutyCycle(DC)
+            sleep(0.8)
+
+            pwm.start(PWM_start)
+            sleep(2)
+            pwm.stop()
+            GPIO.cleanup()
+
         else:
             print("Device not found!")
-
-
-
-
         return True
  
 if __name__ == "__main__":
+    sleep(10)
     # Startup the fauxmo server
     fauxmo.DEBUG = True
     p = fauxmo.poller()
@@ -57,7 +70,7 @@ if __name__ == "__main__":
     d = device_handler()
     for trig, port in d.TRIGGERS.items():
         fauxmo.fauxmo(trig, u, p, None, port, d)
- 
+
     # Loop and poll for incoming Echo requests
     logging.debug("Entering fauxmo polling loop")
     while True:
