@@ -1,0 +1,16 @@
+[Unit]
+Description=The Alexa FUCKKINGG YEAAAAA!
+BindsTo=sys-subsystem-net-devices-wlan0.device
+After=sys-subsystem-net-devices-wlan0.device
+
+[Service]
+WorkingDirectory=/home/pi/IOT-Pi3-Alexa-Automation/
+ExecStart=/usr/bin/python3 RPi_name_port_gpio.py
+Restart=always
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=alexa
+
+[Install]
+WantedBy=multi-user.target
